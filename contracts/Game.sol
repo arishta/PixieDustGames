@@ -7,35 +7,52 @@ contract Game{
     
     uint maxTokensAllowed;
     PixieDustTokens token;
+    uint headCount;
+    uint tailCount;
 
     constructor(uint _maxTokensAllowed, address _tokenAddress) {
         maxTokensAllowed = _maxTokensAllowed; 
         token = PixieDustTokens(_tokenAddress);
     }
     
-    //generates random number for the coin toss
-    function generateRandomNumber() public view returns (uint _randomNum){
-        return (block.timestamp)%2;
+    //player bets some tokens
+    function betTokens(uint _bettingAmount) public{
+        //token transferred to the game contract address
+        token.transferFrom(msg.sender, address(this), _bettingAmount);
     }
     
-    //contains the core logic of the game
-    function executeGame(uint _bettingAmount, uint8 _choice) payable public {
-
+    //checks if the game has enough balance or not
+    function hasEnoughBalance(uint _bettingAmount) view public{
         uint gameBalance = token.balanceOf(address(this));
-        //check if player has enough balance
         require(gameBalance >= _bettingAmount,"Sorry! We don't have sufficient tokens!");
-        
-        //deposit the balance to this address
-        token.transferFrom(msg.sender, address(this), _bettingAmount);
+    }
+    
+    //fetches the total head and tail count across all games
+    function getCount() public view returns (uint, uint){
+        return (headCount, tailCount);
+    }
 
-        //generate a random number (head/tail)        
-        uint rand = generateRandomNumber();
-        
-        //player wins
+    //generates random number for the coin toss
+    //HEAD:0, TAIL:1
+    function generateRandomNumber() public returns (uint){
+        uint rand = (block.timestamp)%2;
+        if (rand==0){
+            headCount++;
+        }
+        else{
+            tailCount++;
+        }
+        return rand;
+    }
+    
+    //transfers winning amount to the player in case he wins
+    function transferToPlayer(uint _bettingAmount, uint8 _choice, uint rand) payable public {
+
         if (_choice == rand){
             //amount is transferred to the player
             token.approve(address(this), 2*_bettingAmount);
             token.transferFrom(address(this), msg.sender, 2*_bettingAmount);
         }
     }
+    
 }
