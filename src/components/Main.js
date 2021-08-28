@@ -167,7 +167,7 @@ const Main = () => {
 
 	async function transferTokensToPlayer() {
 		setTransferTokensToPlayerRequest(true);
-		await transferToPlayer(process.env.GAME_DEPLOYED_ADDRESS, GameABI, betTokens*2);
+		await transferToPlayer(process.env.GAME_DEPLOYED_ADDRESS, GameABI, betTokens);
 		setTransferTokensToPlayerRequest(false);
 	}
 

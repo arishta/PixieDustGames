@@ -61,7 +61,7 @@ async function playerBetTokens(contractAddr, artifact, tokensToBet) {
 
         const GameContract = getContract(contractAddr, artifact);
         try {
-            let transaction = await GameContract.betTokens(tokensToBet); //transfer from contracts
+            let transaction = await GameContract.betTokens(tokensToBet);
 
             let receipt = await transaction.wait();
             console.log(receipt);
@@ -109,7 +109,7 @@ async function transferToPlayer(contractAddr, artifact, tokensToTransfer) {
         try {
             // console.log(`Game Contract Address: ${contractAddr}`);
 
-            let transaction = await GameContract.transferToPlayer();    //pass tokens parameter?
+            let transaction = await GameContract.transferToPlayer(tokensToTransfer);
 
             let receipt = await transaction.wait();
             console.log(receipt);
