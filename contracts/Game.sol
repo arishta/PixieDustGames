@@ -46,13 +46,10 @@ contract Game{
     }
     
     //transfers winning amount to the player in case he wins
-    function transferToPlayer(uint _bettingAmount, uint8 _choice, uint rand) payable public {
-
-        if (_choice == rand){
-            //amount is transferred to the player
-            token.approve(address(this), 2*_bettingAmount);
-            token.transferFrom(address(this), msg.sender, 2*_bettingAmount);
-        }
+    function transferToPlayer(uint _bettingAmount) payable public {
+        //amount is transferred to the player
+        token.approve(address(this), 2*_bettingAmount);
+        token.transferFrom(address(this), msg.sender, 2*_bettingAmount);
     }
     
 }

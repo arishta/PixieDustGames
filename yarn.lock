@@ -2115,6 +2115,11 @@
     "mkdirp" "^1.0.4"
     "rimraf" "^3.0.2"
 
+"@openzeppelin/contracts@^4.3.1":
+  "integrity" "sha512-QjgbPPlmDK2clK1hzjw2ROfY8KA5q+PfhDUUxZFEBCZP9fi6d5FuNoh/Uq0oCTMEKPmue69vhX2jcl0N/tFKGw=="
+  "resolved" "https://registry.npmjs.org/@openzeppelin/contracts/-/contracts-4.3.1.tgz"
+  "version" "4.3.1"
+
 "@pmmmwh/react-refresh-webpack-plugin@0.4.3":
   "integrity" "sha512-br5Qwvh8D2OQqSXpd1g/xqXKnK0r+Jz6qVKBbWmpUcrbGOxUrf39V5oZ1876084CGn18uMdR5uvPqBv9UqtBjQ=="
   "resolved" "https://registry.npmjs.org/@pmmmwh/react-refresh-webpack-plugin/-/react-refresh-webpack-plugin-0.4.3.tgz"
@@ -14275,6 +14280,11 @@
   "version" "1.1.0"
   dependencies:
     "ret" "~0.1.10"
+
+"safemath@^1.0.6":
+  "integrity" "sha512-5FxS6jvR0MIqNcts1JuqJO1A/GiqtTyka2pezPS50xw0BNrTp5qw13uv97OF4PGsOHXuau5Xzv1sTMX8N5dJNQ=="
+  "resolved" "https://registry.npmjs.org/safemath/-/safemath-1.0.6.tgz"
+  "version" "1.0.6"
 
 "safer-buffer@^2.0.2", "safer-buffer@^2.1.0", "safer-buffer@>= 2.1.2 < 3", "safer-buffer@>= 2.1.2 < 3.0.0", "safer-buffer@~2.1.0":
   "integrity" "sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg=="
