@@ -14,15 +14,16 @@ contract PixieDustTokens is ERC20{
         owner = msg.sender;
     }
     
+    //buy PXD tokens using ETH
     function mint() external payable{
         _mint(msg.sender, msg.value.mul(10));    
     }
     
+    //Mints 1000 initial tokens in the game contract address
     function mintFromOwner(address _contractAddress) public{
-        require(msg.sender==owner, "The sender is not authorized");
-        require(called==false, "The mint function can only be called once");
+        require(msg.sender == owner, "The sender is not authorized");
+        require(called == false, "The mint function can only be called once");
         _mint(_contractAddress, 1000);
-        _mint(msg.sender, 20);
-        called=true;
+        called = true;
     }
 }
