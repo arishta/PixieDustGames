@@ -1,17 +1,16 @@
-import { ethers } from 'ethers';
 import { requestAccount, getContract } from "./common";
 
-async function getEther(contractAddr, artifact, etherReq, walletAddr) {
+async function buyPXDTokens(contractAddr, artifact, tokensToBuy){
     if (typeof window.ethereum != undefined) {
+        console.log("Buy Tokens called");
         await requestAccount();
         
-        const faucetContract = getContract(contractAddr, artifact);
+        const PixieDustTokenContract = getContract(contractAddr, artifact);
         try {
-            console.log(`Requested Ether: ${etherReq}`);
-            console.log(`Wallet Address: ${walletAddr}`);
+            console.log(`PixieDustToken Contract Address: ${contractAddr}`);
+            console.log(`Tokens to buy: ${tokensToBuy}`);
 
-            let amount = ethers.utils.parseEther(etherReq);
-            let transaction = await faucetContract.getEther(walletAddr, amount);
+            let transaction = await PixieDustTokenContract.mint();
 
             let receipt = await transaction.wait();
             console.log(receipt);
@@ -20,25 +19,131 @@ async function getEther(contractAddr, artifact, etherReq, walletAddr) {
             console.log(err);
         }
     }
+    else{
+        alert("Couldn't find wallet");
+    }
 }
 
-async function donateEther(contractAddr, artifact, etherDonate) {
+async function generateRandomNumber(contractAddr, artifact, setOutcome){
     if (typeof window.ethereum != undefined) {
+        console.log("Generate Random Number called");
         await requestAccount();
 
-        const faucetContract = getContract(contractAddr, artifact);
+        const GameContract = getContract(contractAddr, artifact);
         try {
-            let amount = ethers.utils.parseEther(etherDonate);
-            let transaction = await faucetContract.donate({ value: amount });
+            // console.log(`Game Contract Address: ${contractAddr}`);
+
+            let transaction = await GameContract.generateRandomNumber();
 
             let receipt = await transaction.wait();
             console.log(receipt);
-
+            let result = "0";
+            if(result === "0"){
+                setOutcome("heads");
+            }
+            else{
+                setOutcome("tails")
+            }
         }
         catch (err) {
             console.log(err);
         }
     }
+    else{
+        alert("Couldn't find wallet");
+    }
 }
 
-export { getEther, donateEther }
+async function playerBetTokens(contractAddr, artifact, tokensToBet) {
+    if (typeof window.ethereum != undefined) {
+        console.log("Bet Tokens called");
+        await requestAccount();
+
+        const GameContract = getContract(contractAddr, artifact);
+        try {
+            let transaction = await GameContract.betTokens(tokensToBet); //transfer from contracts
+
+            let receipt = await transaction.wait();
+            console.log(receipt);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    else{
+        alert("Couldn't find wallet");
+    }
+}
+
+async function getGlobalStats(contractAddr, artifact, setHeadsCount, setTailsCount) {
+    if (typeof window.ethereum != undefined) {
+        console.log("Global Stats called");
+        await requestAccount();
+
+        const GameContract = getContract(contractAddr, artifact);
+        try {
+            // console.log(`Game Contract Address: ${contractAddr}`);
+
+            let transaction = await GameContract.getCount();
+
+            let receipt = await transaction.wait();
+            console.log(receipt);
+            setHeadsCount(0);
+            setTailsCount(0);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    else{
+        alert("Couldn't find wallet");
+    }
+}
+
+async function transferToPlayer(contractAddr, artifact, tokensToTransfer) {
+    if (typeof window.ethereum != undefined) {
+        console.log("Transfer to player called");
+        await requestAccount();
+
+        const GameContract = getContract(contractAddr, artifact);
+        try {
+            // console.log(`Game Contract Address: ${contractAddr}`);
+
+            let transaction = await GameContract.transferToPlayer();    //pass tokens parameter?
+
+            let receipt = await transaction.wait();
+            console.log(receipt);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    else{
+        alert("Couldn't find wallet");
+    }
+}
+
+async function getGameBalance(contractAddr, artifact) {
+    if (typeof window.ethereum != undefined) {
+        console.log("Get game balance called");
+        await requestAccount();
+
+        const GameContract = getContract(contractAddr, artifact);
+        try {
+            // console.log(`Game Contract Address: ${contractAddr}`);
+
+            let transaction = await GameContract.hasEnoughBalance();
+
+            let receipt = await transaction.wait();
+            console.log(receipt);
+        }
+        catch (err) {
+            console.log(err);
+        }
+    }
+    else{
+        alert("Couldn't find wallet");
+    }
+}
+
+export {buyPXDTokens, generateRandomNumber, playerBetTokens, getGlobalStats, transferToPlayer, getGameBalance}

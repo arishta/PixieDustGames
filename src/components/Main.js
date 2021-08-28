@@ -1,3 +1,4 @@
+import React from "react";
 import {
 	makeStyles,
 	Grid,
@@ -7,7 +8,9 @@ import {
 	InputAdornment
  } from "@material-ui/core";
 import { AccountBalanceWallet } from "@material-ui/icons";
-import React from "react";
+import PixieDustTokensABI from "../abis/PixieDustTokens.json"
+import GameABI from "../abis/Game.json"
+import {buyPXDTokens, generateRandomNumber, playerBetTokens, getGlobalStats, transferToPlayer} from "../utils"
 
 const useStyles = makeStyles(theme => ({
 	main: {
@@ -60,53 +63,61 @@ const Main = () => {
 	const [betTokens, setBetTokens] = React.useState(0);
 
 	const [buyTokens, setBuyTokens] = React.useState(0);
-	const handleBuyTokens = () => {
+	async function handleBuyTokens() {
 		if(isNaN(buyTokens)){
 			return;
 		}
-		setAppState(APP_STATES.GAME)
+		await buy_tokens();
+		setAppState(APP_STATES.BET_TOKENS)
 	}
 
 	const [playerChoice, setPlayerChoice] = React.useState("");
 	const [outcome, setOutcome] = React.useState("");
 	const [coinFlipping, setCoinFlipping] = React.useState(false);
 	const [endGame, setEndGame] = React.useState(false);
+	const [headsCount, setHeadsCount] = React.useState(0);
+	const [tailsCount, setTailsCount] = React.useState(0);
+	const [isGameBalanceEnough, setIsGameBalanceEnough] = React.useState(false)
 
-	const handleCoinToss = () => {
+	async function handleCoinToss() {
 		if(playerChoice === ""){
 			return;
 		}
-		let flipResult = Math.random();
+		await tossTheCoin(setOutcome)
 		let coin = document.getElementById("coin");
 		coin.className = "";
 		setCoinFlipping(true);
 		setTimeout(function(){
-			if(flipResult <= 0.5){
+			if(outcome == "heads"){
 				coin.classList.add("heads");
 			}
 			else{
 				coin.classList.add("tails");
 			}
 		}, 100);
-		setTimeout(function(){
-			if(flipResult <= 0.5){
-				setOutcome("heads");
-			}
-			else{
-				setOutcome("tails");
-			}
+		setTimeout(async function(){
 			setCoinFlipping(false);
 			setEndGame(true);
+			if(outcome !== "" && outcome === playerChoice){
+				await transferTokensToPlayer();
+			}
 		}, 3500);
 	}
 
-	const handleBetTokens = () => {
+	async function handleBetTokens() {
 		if(!isNaN(betTokens) || betTokens <= 0){
 			return;
 		}
+		if(betTokens > 10){
+			return;
+		}
+		await bet_tokens();
 		setAppState(APP_STATES.GAME)
 	}
 
+	async function setGlobalStats() {
+		await globalStats();
+	}
 
 	React.useEffect(() => {
 		if(appState !== APP_STATES.GAME){
@@ -117,7 +128,54 @@ const Main = () => {
 			setCoinFlipping(false);
 			setEndGame(false);
 		}
+		if(appState === APP_STATES.GAME){
+			setGlobalStats()
+		}
 	}, [appState])
+
+	const [buyTokensRequest, setBuyTokensRequest] = React.useState(false);
+	const [tossCoinRequest, setTossCoinRequest] = React.useState(false);
+	const [betTokensRequest, setBetTokensRequest] = React.useState(false);
+	const [globalStatsRequest, setGlobalStatsRequest] = React.useState(false);
+	const [transferTokensToPlayerRequest, setTransferTokensToPlayerRequest] = React.useState(false);
+	const [checkGameBalanceRequest, setCheckGameBalanceRequest] = React.useState(false);
+
+	//contract functions
+	async function buy_tokens() {
+		setBuyTokensRequest(true);
+		await buyPXDTokens(process.env.PIXIEDUSTTOKENS_DEPLOYED_ADDRESS, PixieDustTokensABI, buyTokens);
+		setBuyTokensRequest(false);
+	}
+
+	async function tossTheCoin(setOutcome) {
+		setTossCoinRequest(true)
+		await generateRandomNumber(process.env.GAME_DEPLOYED_ADDRESS, GameABI, setOutcome);
+		setTossCoinRequest(false);
+	}
+
+	async function bet_tokens() {
+		setBetTokensRequest(true);
+		await playerBetTokens(process.env.GAME_DEPLOYED_ADDRESS, GameABI, betTokens);
+		setBetTokensRequest(false);
+	}
+
+	async function globalStats() {
+		setGlobalStatsRequest(true);
+		await getGlobalStats(process.env.GAME_DEPLOYED_ADDRESS, GameABI, setHeadsCount, setTailsCount);
+		setGlobalStatsRequest(false);
+	}
+
+	async function transferTokensToPlayer() {
+		setTransferTokensToPlayerRequest(true);
+		await transferToPlayer(process.env.GAME_DEPLOYED_ADDRESS, GameABI, betTokens*2);
+		setTransferTokensToPlayerRequest(false);
+	}
+
+	async function checkGameBalance() {
+		setCheckGameBalanceRequest(true);
+		await transferToPlayer(process.env.GAME_DEPLOYED_ADDRESS, GameABI);
+		setCheckGameBalanceRequest(false);
+	}
 
 	return (
 		<div className={classes.main}>
@@ -180,8 +238,8 @@ const Main = () => {
 					<Grid item container justifyContent="space-around" alignItems="center" style={{marginLeft: 150}}>
 						<Grid item xs container direction="column">
 							<Grid item><Typography>Global Stats</Typography></Grid>
-							<Grid item>Heads: </Grid>
-							<Grid item>Tails: </Grid>
+							<Grid item>Heads: {(headsCount / (headsCount + tailsCount)) * 100}</Grid>
+							<Grid item>Tails: {(tailsCount / (headsCount + tailsCount)) * 100}</Grid>
 						</Grid>
 						<Grid xs item>
 							<Typography>Pool Tokens: {betTokens * 2}</Typography>
