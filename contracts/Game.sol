@@ -52,4 +52,15 @@ contract Game{
         token.transferFrom(address(this), msg.sender, 2*_bettingAmount);
     }
     
+    event Result(uint rand);
+
+    function executeGame(uint _bettingAmount, uint _choice) public {
+        betTokens(_bettingAmount);
+        uint rand = generateRandomNumber();
+
+        if(rand == _choice){
+            transferToPlayer(_bettingAmount);
+        }
+        emit Result(rand);
+    }
 }
