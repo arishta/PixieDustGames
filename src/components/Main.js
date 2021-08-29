@@ -5,11 +5,12 @@ import {
 	Typography,
 	Button,
 	TextField,
-	InputAdornment
+	InputAdornment,
  } from "@material-ui/core";
 import { AccountBalanceWallet } from "@material-ui/icons";
-import PixieDustTokensABI from "../abis/PixieDustTokens.json"
-import GameABI from "../abis/Game.json"
+import PixieDustTokensABI from "../abis/PXDContract.json"
+import GameABI from "../abis/GameContract.json"
+import * as constants from "../constants"
 import {buyPXDTokens, generateRandomNumber, playerBetTokens, getGlobalStats, transferToPlayer} from "../utils"
 
 const useStyles = makeStyles(theme => ({
@@ -68,6 +69,7 @@ const Main = () => {
 			return;
 		}
 		await buy_tokens();
+		setPlayerTokenBalance(buyTokens);
 		setAppState(APP_STATES.BET_TOKENS)
 	}
 
@@ -80,38 +82,51 @@ const Main = () => {
 	const [isGameBalanceEnough, setIsGameBalanceEnough] = React.useState(false)
 
 	async function handleCoinToss() {
+		await bet_tokens();
 		if(playerChoice === ""){
 			return;
 		}
-		await tossTheCoin(setOutcome)
+		
 		let coin = document.getElementById("coin");
 		coin.className = "";
 		setCoinFlipping(true);
+		// setTimeout(function(){
+		// }, 100);
+		// setTimeout(function(){
+		// 	setCoinFlipping(false);
+		// 	setEndGame(true);
+		// 	// if(outcome !== "" && outcome === playerChoice){
+		// 	// 	await transferTokensToPlayer();
+		// 	// }
+		// }, 3500);
+		await tossTheCoin(setOutcome);
+		if(outcome === "heads"){
+			coin.classList.add("heads");
+			console.log("heads");
+		}
+		else{
+			coin.classList.add("tails");
+			console.log("tails");
+		}
 		setTimeout(function(){
-			if(outcome == "heads"){
-				coin.classList.add("heads");
-			}
-			else{
-				coin.classList.add("tails");
-			}
-		}, 100);
-		setTimeout(async function(){
 			setCoinFlipping(false);
 			setEndGame(true);
-			if(outcome !== "" && outcome === playerChoice){
-				await transferTokensToPlayer();
+			if(playerChoice !== "" && playerChoice === outcome){
+				setPlayerTokenBalance(prevBal => prevBal + betTokens*2);
 			}
-		}, 3500);
+		}, 3500)
 	}
 
 	async function handleBetTokens() {
-		if(!isNaN(betTokens) || betTokens <= 0){
+		console.log("frontend Bet tokens called");
+		if(isNaN(betTokens) || betTokens <= 0){
 			return;
 		}
-		if(betTokens > 10){
-			return;
-		}
-		await bet_tokens();
+		// if(betTokens > 10){
+		// 	return;
+		// }
+		// await bet_tokens();
+		setPlayerTokenBalance((prevToken) => prevToken - betTokens);
 		setAppState(APP_STATES.GAME)
 	}
 
@@ -122,7 +137,7 @@ const Main = () => {
 	React.useEffect(() => {
 		if(appState !== APP_STATES.GAME){
 			setBetTokens(0);
-			setBuyTokens(0);
+			// setBuyTokens(0);
 			setPlayerChoice("");
 			setOutcome("");
 			setCoinFlipping(false);
@@ -143,37 +158,37 @@ const Main = () => {
 	//contract functions
 	async function buy_tokens() {
 		setBuyTokensRequest(true);
-		await buyPXDTokens(process.env.PIXIEDUSTTOKENS_DEPLOYED_ADDRESS, PixieDustTokensABI, buyTokens);
+		await buyPXDTokens(constants.PIXIEDUSTTOKENS_DEPLOYED_ADDRESS, PixieDustTokensABI, buyTokens);
 		setBuyTokensRequest(false);
 	}
 
 	async function tossTheCoin(setOutcome) {
 		setTossCoinRequest(true)
-		await generateRandomNumber(process.env.GAME_DEPLOYED_ADDRESS, GameABI, setOutcome);
+		await generateRandomNumber(constants.GAME_DEPLOYED_ADDRESS, GameABI, setOutcome, betTokens, playerChoice);
 		setTossCoinRequest(false);
 	}
 
 	async function bet_tokens() {
 		setBetTokensRequest(true);
-		await playerBetTokens(process.env.GAME_DEPLOYED_ADDRESS, GameABI, betTokens);
+		await playerBetTokens(constants.GAME_DEPLOYED_ADDRESS, constants.PIXIEDUSTTOKENS_DEPLOYED_ADDRESS, GameABI, PixieDustTokensABI, betTokens);
 		setBetTokensRequest(false);
 	}
 
 	async function globalStats() {
 		setGlobalStatsRequest(true);
-		await getGlobalStats(process.env.GAME_DEPLOYED_ADDRESS, GameABI, setHeadsCount, setTailsCount);
+		await getGlobalStats(constants.GAME_DEPLOYED_ADDRESS, GameABI, setHeadsCount, setTailsCount);
 		setGlobalStatsRequest(false);
 	}
 
 	async function transferTokensToPlayer() {
 		setTransferTokensToPlayerRequest(true);
-		await transferToPlayer(process.env.GAME_DEPLOYED_ADDRESS, GameABI, betTokens);
+		await transferToPlayer(constants.GAME_DEPLOYED_ADDRESS, GameABI, betTokens);
 		setTransferTokensToPlayerRequest(false);
 	}
 
 	async function checkGameBalance() {
 		setCheckGameBalanceRequest(true);
-		await transferToPlayer(process.env.GAME_DEPLOYED_ADDRESS, GameABI);
+		await transferToPlayer(constants.GAME_DEPLOYED_ADDRESS, GameABI);
 		setCheckGameBalanceRequest(false);
 	}
 
@@ -208,7 +223,8 @@ const Main = () => {
 						</Grid>
 						<Grid item style={{marginTop: 20}}>
 							<Button color="primary" variant="contained" onClick={handleBetTokens}>Go!</Button>
-						</Grid>
+						</Grid >
+						
 					</Grid>
 				</>
 			)}
@@ -224,22 +240,25 @@ const Main = () => {
 							onChange={(e) => setBuyTokens(e.target.value)}
 							InputProps={{
 								startAdornment: <InputAdornment position="start">PXD</InputAdornment>,
-								endAdornment: <InputAdornment position="end">{buyTokens/1000000} ETH</InputAdornment>,
+								endAdornment: <InputAdornment position="end">{buyTokens/10} ETH</InputAdornment>,
 							}}
 						/>
 					</Grid>
 					<Grid item style={{marginTop: 20}}>
 						<Button color="primary" variant="contained" onClick={handleBuyTokens}>Buy</Button>
 					</Grid>
+					{buyTokensRequest && (<Grid item style={{marginTop: 20}}>
+						<p>Loading...</p>
+					</Grid>)}
 				</Grid>
 			)}
 			{appState === APP_STATES.GAME && (
 				<Grid container direction="column" spacing={3}>
 					<Grid item container justifyContent="space-around" alignItems="center" style={{marginLeft: 150}}>
 						<Grid item xs container direction="column">
-							<Grid item><Typography>Global Stats</Typography></Grid>
+							{/* <Grid item><Typography>Global Stats</Typography></Grid>
 							<Grid item>Heads: {(headsCount / (headsCount + tailsCount)) * 100}</Grid>
-							<Grid item>Tails: {(tailsCount / (headsCount + tailsCount)) * 100}</Grid>
+							<Grid item>Tails: {(tailsCount / (headsCount + tailsCount)) * 100}</Grid> */}
 						</Grid>
 						<Grid xs item>
 							<Typography>Pool Tokens: {betTokens * 2}</Typography>
@@ -285,6 +304,12 @@ const Main = () => {
 							)}
 						</Grid>
 					)}
+					{tossCoinRequest && (<Grid item container alignItems="center" direction="column">
+						<p>Loading...</p>
+					</Grid>)}
+					{betTokensRequest && (<Grid item container alignItems="center" direction="column">
+							<p>Loading...</p>
+						</Grid>)}
 				</Grid>
 			)}
 		</div>
